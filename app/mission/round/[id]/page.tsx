@@ -10,7 +10,7 @@ import { SpaceBackground } from "@/components/space-background"
 import { MissionControlPanel } from "@/components/mission-control-panel"
 import { MissionConsole } from "@/components/mission-console"
 import { MissionBriefDrawer } from "@/components/mission-brief-drawer"
-import { HelpCircle, ArrowRight, ChevronDown, ChevronUp } from "lucide-react"
+import { HelpCircle, ArrowRight, ChevronDown, ChevronUp, AlertCircle } from "lucide-react"
 import { questions } from "@/data/questions"
 
 export default function MissionRoundPage() {
@@ -23,13 +23,13 @@ export default function MissionRoundPage() {
   const [showHint, setShowHint] = useState(false)
   const [answers, setAnswers] = useState<string[]>([])
   const [timeElapsed, setTimeElapsed] = useState(0)
-  const [isPaused, setIsPaused] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showFeedback, setShowFeedback] = useState(false)
   const [isCorrect, setIsCorrect] = useState(false)
   const [showBriefDrawer, setShowBriefDrawer] = useState(false)
   const [collectedPasswordParts, setCollectedPasswordParts] = useState<string[]>([])
   const [isInitializing, setIsInitializing] = useState(true)
+  const [showTimerWarning, setShowTimerWarning] = useState(false)
 
   const roundQuestions = questions[roundId - 1] || []
   const currentQuestionData = roundQuestions[currentQuestion]
@@ -50,6 +50,12 @@ export default function MissionRoundPage() {
       setIsInitializing(false)
       // Start ambient sound
       audioRef.current?.play().catch((e) => console.log("Audio play failed:", e))
+
+      // Show timer warning
+      setShowTimerWarning(true)
+      setTimeout(() => {
+        setShowTimerWarning(false)
+      }, 5000)
     }, 2000)
 
     return () => {
@@ -61,14 +67,15 @@ export default function MissionRoundPage() {
   useEffect(() => {
     let interval: NodeJS.Timeout
 
-    if (!isPaused && !isInitializing) {
+    // Timer is always running once initialized (no pause functionality)
+    if (!isInitializing) {
       interval = setInterval(() => {
         setTimeElapsed((prev) => prev + 1)
       }, 1000)
     }
 
     return () => clearInterval(interval)
-  }, [isPaused, isInitializing])
+  }, [isInitializing])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -137,21 +144,6 @@ export default function MissionRoundPage() {
         }
       }
     }, 2500)
-  }
-
-  const togglePause = () => {
-    // Play sound
-    const audio = new Audio("/sounds/interface-beep.mp3")
-    audio.volume = 0.2
-    audio.play().catch((e) => console.log("Audio play failed:", e))
-
-    setIsPaused((prev) => !prev)
-
-    if (isPaused) {
-      audioRef.current?.play().catch((e) => console.log("Audio play failed:", e))
-    } else {
-      audioRef.current?.pause()
-    }
   }
 
   const toggleHint = () => {
@@ -252,11 +244,26 @@ export default function MissionRoundPage() {
             username="agent_nebula"
             roundId={roundId}
             timeElapsed={timeElapsed}
-            isPaused={isPaused}
-            togglePause={togglePause}
+            isPaused={false}
+            togglePause={() => {}}
             progress={progress}
             collectedPasswordParts={collectedPasswordParts}
+            continuousTimer={true}
           />
+
+          {showTimerWarning && (
+            <motion.div
+              className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-amber-500/90 text-black px-4 py-2 rounded-md shadow-lg flex items-center gap-2 max-w-md"
+              initial={{ y: -50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -50, opacity: 0 }}
+            >
+              <AlertCircle className="h-5 w-5" />
+              <p className="text-sm font-medium">
+                Timer is running continuously and cannot be paused. Good luck, agent!
+              </p>
+            </motion.div>
+          )}
 
           <main className="flex-1 container mx-auto px-4 py-6">
             {/* Round Header */}
@@ -410,6 +417,17 @@ export default function MissionRoundPage() {
                         Each correct answer will contribute to your final decryption code. Choose wisely, as your
                         answers will determine your success.
                       </p>
+
+                      <div className="mt-6 pt-4 border-t border-gray-800">
+                        <div className="flex items-center mb-2">
+                          <div className="w-3 h-3 rounded-full bg-amber-500 mr-2"></div>
+                          <span className="text-amber-400 text-sm font-medium">Timer Running</span>
+                        </div>
+                        <p className="text-xs text-gray-400">
+                          Your timer is running continuously and cannot be paused. Complete the mission as quickly as
+                          possible for a higher ranking.
+                        </p>
+                      </div>
 
                       <div className="mt-6 pt-4 border-t border-gray-800">
                         <h4 className="text-sm font-semibold mb-2">Password Fragments Collected:</h4>

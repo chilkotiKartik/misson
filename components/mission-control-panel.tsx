@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { Rocket, Clock, PauseCircle, PlayCircle, Key, Home, ChevronLeft } from "lucide-react"
+import { Rocket, Clock, PauseCircle, PlayCircle, Key, Home, ChevronLeft, AlertCircle } from "lucide-react"
 import { EnhancedAvatarGenerator } from "@/components/enhanced-avatar-generator"
 
 interface MissionControlPanelProps {
@@ -17,6 +17,7 @@ interface MissionControlPanelProps {
   collectedPasswordParts: string[]
   isFinalStage?: boolean
   isLeaderboard?: boolean
+  continuousTimer?: boolean
 }
 
 export function MissionControlPanel({
@@ -29,6 +30,7 @@ export function MissionControlPanel({
   collectedPasswordParts,
   isFinalStage = false,
   isLeaderboard = false,
+  continuousTimer = false,
 }: MissionControlPanelProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showHints, setShowHints] = useState(false)
@@ -82,7 +84,7 @@ export function MissionControlPanel({
                   <span className="font-mono text-sm">{formatTime(timeElapsed)}</span>
                 </div>
 
-                {!isFinalStage && (
+                {!isFinalStage && !continuousTimer && (
                   <Button
                     variant="outline"
                     size="icon"
@@ -96,6 +98,13 @@ export function MissionControlPanel({
                     )}
                     <span className="sr-only">{isPaused ? "Resume" : "Pause"}</span>
                   </Button>
+                )}
+
+                {continuousTimer && (
+                  <div className="hidden md:flex items-center gap-1 text-amber-400 bg-amber-500/10 px-2 py-1 rounded-md">
+                    <AlertCircle className="h-4 w-4" />
+                    <span className="text-xs">Timer Running</span>
+                  </div>
                 )}
 
                 {collectedPasswordParts.length > 0 && (

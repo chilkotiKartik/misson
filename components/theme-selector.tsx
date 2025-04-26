@@ -1,18 +1,25 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 import { Palette } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
 export function ThemeSelector() {
+  const { theme, setTheme } = useTheme()
   const [isOpen, setIsOpen] = useState(false)
-  const [selectedTheme, setSelectedTheme] = useState("dark-nebula")
+  const [mounted, setMounted] = useState(false)
+
+  // Wait for component to mount to avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const themes = [
-    { id: "dark-nebula", name: "Dark Nebula", color: "bg-cyan-500" },
-    { id: "electric-blue", name: "Electric Blue", color: "bg-blue-500" },
-    { id: "infrared-matrix", name: "Infrared Matrix", color: "bg-purple-500" },
+    { id: "dark", name: "Dark Nebula", color: "bg-cyan-500" },
+    { id: "system", name: "System Theme", color: "bg-purple-500" },
+    { id: "light", name: "Light Mode", color: "bg-amber-500" },
   ]
 
   const toggleOpen = () => {
@@ -30,11 +37,17 @@ export function ThemeSelector() {
     audio.volume = 0.2
     audio.play().catch((e) => console.log("Audio play failed:", e))
 
-    setSelectedTheme(themeId)
+    setTheme(themeId)
     setIsOpen(false)
+  }
 
-    // In a real app, this would apply the theme
-    // For now, we'll just store the selection
+  if (!mounted) {
+    return (
+      <Button variant="outline" size="icon" className="border-gray-700 text-gray-300 hover:bg-gray-800">
+        <Palette className="h-4 w-4" />
+        <span className="sr-only">Theme</span>
+      </Button>
+    )
   }
 
   return (
@@ -60,17 +73,17 @@ export function ThemeSelector() {
           >
             <div className="p-2">
               <div className="text-xs text-gray-400 px-2 py-1">Select Theme</div>
-              {themes.map((theme) => (
+              {themes.map((themeOption) => (
                 <button
-                  key={theme.id}
+                  key={themeOption.id}
                   className={`w-full text-left px-2 py-1.5 rounded-md text-sm flex items-center gap-2 ${
-                    selectedTheme === theme.id ? "bg-gray-800" : "hover:bg-gray-800/50"
+                    theme === themeOption.id ? "bg-gray-800" : "hover:bg-gray-800/50"
                   }`}
-                  onClick={() => selectTheme(theme.id)}
+                  onClick={() => selectTheme(themeOption.id)}
                 >
-                  <div className={`w-3 h-3 rounded-full ${theme.color}`}></div>
-                  <span>{theme.name}</span>
-                  {selectedTheme === theme.id && <span className="ml-auto text-xs text-cyan-400">Active</span>}
+                  <div className={`w-3 h-3 rounded-full ${themeOption.color}`}></div>
+                  <span>{themeOption.name}</span>
+                  {theme === themeOption.id && <span className="ml-auto text-xs text-cyan-400">Active</span>}
                 </button>
               ))}
             </div>

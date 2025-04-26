@@ -14,12 +14,11 @@ export function MissionCountdown() {
   })
 
   useEffect(() => {
-    // Set a future date for the next mission (7 days from now)
-    const futureDate = new Date()
-    futureDate.setDate(futureDate.getDate() + 7)
+    // Set event date to April 27, 2025, 7 PM
+    const eventDate = new Date("2025-04-27T19:00:00")
 
     const calculateTimeLeft = () => {
-      const difference = +futureDate - +new Date()
+      const difference = +eventDate - +new Date()
 
       if (difference > 0) {
         setTimeLeft({
@@ -45,17 +44,21 @@ export function MissionCountdown() {
       <CardContent className="p-6">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
-            <h3 className="text-xl font-bold mb-2 text-white">Next Global Mission</h3>
-            <p className="text-gray-400">Join agents worldwide in the next coordinated mission</p>
+            <h3 className="text-xl font-bold mb-2 text-white">Mission Decrypt Event</h3>
+            <p className="text-gray-400">Join agents worldwide in this coordinated mission</p>
 
             <div className="flex items-center gap-4 mt-4">
               <div className="flex items-center text-cyan-400">
                 <Calendar className="h-4 w-4 mr-2" />
-                <span className="text-sm">Operation Starfall</span>
+                <span className="text-sm">April 27, 2025</span>
               </div>
               <div className="flex items-center text-purple-400">
+                <Clock className="h-4 w-4 mr-2" />
+                <span className="text-sm">7:00 PM onwards</span>
+              </div>
+              <div className="flex items-center text-emerald-400">
                 <Users className="h-4 w-4 mr-2" />
-                <span className="text-sm">142 Agents Enlisted</span>
+                <span className="text-sm">156 Agents Enlisted</span>
               </div>
             </div>
           </div>
