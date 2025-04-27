@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { X, Gift } from "lucide-react"
+import { X, Gift, Award } from "lucide-react"
 
 interface SecretBoxRevealProps {
   open: boolean
@@ -93,16 +93,25 @@ export function SecretBoxReveal({ open, onClose }: SecretBoxRevealProps) {
                     className="text-center"
                   >
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-amber-500 to-purple-600 flex items-center justify-center">
-                      <span className="text-2xl">🌟</span>
+                      <Award className="h-8 w-8 text-white" />
                     </div>
 
-                    <h4 className="text-xl font-bold text-white mb-2">Cosmic Wisdom</h4>
+                    <h4 className="text-xl font-bold text-white mb-2">Mission Certificate Unlocked!</h4>
 
                     <div className="bg-black/30 border border-gray-800 rounded-lg p-4 mb-6">
-                      <p className="text-amber-400 italic">"{randomQuote}"</p>
+                      <p className="text-amber-400 italic mb-4">"{randomQuote}"</p>
+                      <p className="text-gray-300">
+                        You've earned a special certificate for your achievement. It will be available for download on
+                        the next screen.
+                      </p>
                     </div>
 
-                    <p className="text-gray-300 text-sm">This wisdom has been added to your agent profile.</p>
+                    <Button
+                      className="bg-gradient-to-r from-amber-500 to-purple-600 text-black hover:from-amber-400 hover:to-purple-500"
+                      onClick={onClose}
+                    >
+                      View Certificate
+                    </Button>
                   </motion.div>
                 )}
               </div>

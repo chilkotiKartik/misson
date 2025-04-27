@@ -8,9 +8,9 @@ import { Progress } from "@/components/ui/progress"
 import { AdminEventCountdown } from "@/components/admin/admin-event-countdown"
 import { AdminStatsCards } from "@/components/admin/admin-stats-cards"
 import { AdminActivityChart } from "@/components/admin/admin-activity-chart"
-import { AdminParticipantTable } from "@/components/admin/admin-participant-table"
 import { AdminLiveLeaderboard } from "@/components/admin/admin-live-leaderboard"
-import { Users, Trophy, Settings, Activity, RefreshCw } from "lucide-react"
+import { AdminParticipantManagement } from "@/components/admin/admin-participant-management"
+import { Users, Trophy, Settings, Activity, RefreshCw, UserPlus } from "lucide-react"
 
 export default function AdminDashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
@@ -18,8 +18,27 @@ export default function AdminDashboardPage() {
   const [totalParticipants, setTotalParticipants] = useState(0)
   const [completedMissions, setCompletedMissions] = useState(0)
   const [lastRefreshed, setLastRefreshed] = useState(new Date())
+  const [adminUsername, setAdminUsername] = useState("admin")
+  const [adminRole, setAdminRole] = useState("Super Admin")
 
   useEffect(() => {
+    // Check if admin is logged in
+    const isLoggedIn = localStorage.getItem("adminLoggedIn")
+    const storedUsername = localStorage.getItem("adminUsername")
+    const storedRole = localStorage.getItem("adminRole")
+
+    if (!isLoggedIn) {
+      window.location.href = "/admin/login"
+    }
+
+    if (storedUsername) {
+      setAdminUsername(storedUsername)
+    }
+
+    if (storedRole) {
+      setAdminRole(storedRole)
+    }
+
     // Simulate loading data
     const timer = setTimeout(() => {
       setIsLoading(false)
@@ -48,7 +67,10 @@ export default function AdminDashboardPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-gray-400">Manage Mission Decrypt event on April 27, 2025, 7 PM onwards</p>
+          <p className="text-gray-400">
+            Welcome back, <span className="text-purple-400">{adminUsername}</span> ({adminRole}) | Manage Mission
+            Decrypt event on April 27, 2025, 7 PM onwards
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <p className="text-xs text-gray-400">Last refreshed: {lastRefreshed.toLocaleTimeString()}</p>
@@ -177,12 +199,18 @@ export default function AdminDashboardPage() {
 
         <TabsContent value="participants" className="space-y-4">
           <Card className="bg-gray-900/60 backdrop-blur-sm border-gray-800">
-            <CardHeader>
-              <CardTitle>All Participants</CardTitle>
-              <CardDescription>Manage and monitor all registered participants</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div>
+                <CardTitle>Participant Management</CardTitle>
+                <CardDescription>Add and manage participant accounts</CardDescription>
+              </div>
+              <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add Participant
+              </Button>
             </CardHeader>
             <CardContent>
-              <AdminParticipantTable isLoading={isLoading} />
+              <AdminParticipantManagement />
             </CardContent>
           </Card>
         </TabsContent>
@@ -212,12 +240,18 @@ function AdminEventSettings() {
   const [questionSets, setQuestionSets] = useState(true)
   const [antiCheat, setAntiCheat] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [certificateEnabled, setCertificateEnabled] = useState(true)
 
   const handleSave = () => {
     setIsSaving(true)
     // Simulate saving
     setTimeout(() => {
       setIsSaving(false)
+
+      // Play success sound
+      const audio = new Audio("/sounds/success-chime.mp3")
+      audio.volume = 0.2
+      audio.play().catch((e) => console.log("Audio play failed:", e))
     }, 1500)
   }
 
@@ -278,6 +312,22 @@ function AdminEventSettings() {
                     antiCheat ? "translate-x-6 bg-purple-500" : "translate-x-1 bg-gray-500"
                   } inline-block h-4 w-4 transform rounded-full transition-transform`}
                   onClick={() => setAntiCheat(!antiCheat)}
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Certificate Generation</p>
+                <p className="text-sm text-gray-400">
+                  Enable certificate generation for participants who complete all rounds
+                </p>
+              </div>
+              <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
+                <span
+                  className={`${
+                    certificateEnabled ? "translate-x-6 bg-purple-500" : "translate-x-1 bg-gray-500"
+                  } inline-block h-4 w-4 transform rounded-full transition-transform`}
+                  onClick={() => setCertificateEnabled(!certificateEnabled)}
                 />
               </div>
             </div>

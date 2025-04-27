@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Rocket, ArrowLeft, Eye, EyeOff } from "lucide-react"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Rocket, ArrowLeft, Eye, EyeOff, GraduationCap, BookOpen, Shield } from "lucide-react"
 import { SpaceBackground } from "@/components/space-background"
 
 export default function LoginPage() {
@@ -22,6 +23,8 @@ export default function LoginPage() {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [showAnimation, setShowAnimation] = useState(true)
+  const [activeRole, setActiveRole] = useState("participant")
+  const [error, setError] = useState("")
 
   useEffect(() => {
     // Hide animation after 2 seconds
@@ -44,11 +47,13 @@ export default function LoginPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+    setError("")
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError("")
 
     // Play button sound
     const audio = new Audio("/sounds/button-click.mp3")
@@ -57,33 +62,59 @@ export default function LoginPage() {
 
     // Simulate login
     setTimeout(() => {
-      router.push("/inbox")
+      if (activeRole === "admin") {
+        // Admin login
+        if (formData.username === "admin" && formData.password === "admin123") {
+          localStorage.setItem("adminLoggedIn", "true")
+          localStorage.setItem("adminUsername", formData.username)
+          localStorage.setItem("adminRole", "Super Admin")
+          router.push("/admin")
+        } else if (formData.username === "moderator" && formData.password === "mod123") {
+          localStorage.setItem("adminLoggedIn", "true")
+          localStorage.setItem("adminUsername", formData.username)
+          localStorage.setItem("adminRole", "Moderator")
+          router.push("/admin")
+        } else {
+          setError("Invalid admin credentials")
+          const errorAudio = new Audio("/sounds/error-beep.mp3")
+          errorAudio.volume = 0.3
+          errorAudio.play().catch((e) => console.log("Audio play failed:", e))
+        }
+      } else {
+        // Participant login
+        if (formData.username && formData.password) {
+          localStorage.setItem("participantLoggedIn", "true")
+          localStorage.setItem("participantUsername", formData.username)
+          router.push("/inbox")
+        } else {
+          setError("Please enter both username and password")
+          const errorAudio = new Audio("/sounds/error-beep.mp3")
+          errorAudio.volume = 0.3
+          errorAudio.play().catch((e) => console.log("Audio play failed:", e))
+        }
+      }
       setIsLoading(false)
     }, 1500)
   }
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        when: "beforeChildren",
-        staggerChildren: 0.1,
-      },
-    },
-  }
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 12,
-      },
-    },
+  const useDemoAccount = (role: string) => {
+    if (role === "admin") {
+      setFormData({
+        username: "admin",
+        password: "admin123",
+      })
+    } else if (role === "moderator") {
+      setFormData({
+        username: "moderator",
+        password: "mod123",
+      })
+    } else {
+      setFormData({
+        username: "agent_nebula",
+        password: "isro123",
+      })
+    }
+    setError("")
   }
 
   return (
@@ -139,36 +170,120 @@ export default function LoginPage() {
 
           {/* Login Form */}
           <div className="flex-1 flex items-center justify-center p-4">
-            <motion.div className="w-full max-w-md" initial="hidden" animate="visible" variants={containerVariants}>
+            <motion.div
+              className="w-full max-w-md"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    when: "beforeChildren",
+                    staggerChildren: 0.1,
+                  },
+                },
+              }}
+            >
               <div className="relative">
                 <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-xl blur opacity-30"></div>
                 <Card className="relative bg-black/80 backdrop-blur-md border-gray-800">
                   <CardHeader>
-                    <motion.div variants={itemVariants}>
-                      <CardTitle className="text-2xl text-white">Agent Login</CardTitle>
-                      <CardDescription>Enter your credentials to access the mission</CardDescription>
+                    <motion.div
+                      variants={{
+                        hidden: { y: 20, opacity: 0 },
+                        visible: {
+                          y: 0,
+                          opacity: 1,
+                          transition: {
+                            type: "spring",
+                            stiffness: 100,
+                            damping: 12,
+                          },
+                        },
+                      }}
+                    >
+                      <CardTitle className="text-2xl text-white text-center">Login</CardTitle>
+                      <CardDescription className="text-center">
+                        Choose your role and enter your credentials
+                      </CardDescription>
                     </motion.div>
                   </CardHeader>
                   <CardContent>
+                    <Tabs defaultValue="participant" onValueChange={setActiveRole} className="mb-6">
+                      <TabsList className="grid grid-cols-3 bg-gray-800/50">
+                        <TabsTrigger
+                          value="participant"
+                          className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400"
+                        >
+                          <GraduationCap className="h-4 w-4 mr-2" />
+                          Participant
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="instructor"
+                          className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400"
+                        >
+                          <BookOpen className="h-4 w-4 mr-2" />
+                          Instructor
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="admin"
+                          className="data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400"
+                        >
+                          <Shield className="h-4 w-4 mr-2" />
+                          Admin
+                        </TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+
                     <form onSubmit={handleSubmit} className="space-y-4">
-                      <motion.div className="space-y-2" variants={itemVariants}>
+                      <motion.div
+                        className="space-y-2"
+                        variants={{
+                          hidden: { y: 20, opacity: 0 },
+                          visible: {
+                            y: 0,
+                            opacity: 1,
+                            transition: {
+                              type: "spring",
+                              stiffness: 100,
+                              damping: 12,
+                            },
+                          },
+                        }}
+                      >
                         <Label htmlFor="username" className="text-white">
-                          Agent Codename
+                          {activeRole === "admin" ? "Admin ID / Email" : "Agent Codename"}
                         </Label>
                         <Input
                           id="username"
                           name="username"
-                          placeholder="agent_nebula"
+                          placeholder={activeRole === "admin" ? "admin" : "agent_nebula"}
                           value={formData.username}
                           onChange={handleChange}
                           required
                           className="bg-gray-800/50 border-gray-700 text-white focus:border-cyan-500 focus:ring-cyan-500"
                         />
+                        {activeRole === "admin" && <p className="text-xs text-gray-400">Example: admin or moderator</p>}
                       </motion.div>
-                      <motion.div className="space-y-2" variants={itemVariants}>
+                      <motion.div
+                        className="space-y-2"
+                        variants={{
+                          hidden: { y: 20, opacity: 0 },
+                          visible: {
+                            y: 0,
+                            opacity: 1,
+                            transition: {
+                              type: "spring",
+                              stiffness: 100,
+                              damping: 12,
+                            },
+                          },
+                        }}
+                      >
                         <div className="flex items-center justify-between">
                           <Label htmlFor="password" className="text-white">
-                            Access Code
+                            {activeRole === "admin" ? "Password" : "Access Code"}
                           </Label>
                           <Link href="#" className="text-xs text-cyan-400 hover:text-cyan-300">
                             Forgot code?
@@ -196,11 +311,42 @@ export default function LoginPage() {
                             <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
                           </Button>
                         </div>
+                        {activeRole === "admin" && (
+                          <p className="text-xs text-gray-400">For demo: admin/admin123 or moderator/mod123</p>
+                        )}
                       </motion.div>
-                      <motion.div variants={itemVariants}>
+
+                      {error && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="bg-red-500/20 border border-red-500/50 text-red-400 p-3 rounded-md text-sm"
+                        >
+                          {error}
+                        </motion.div>
+                      )}
+
+                      <motion.div
+                        variants={{
+                          hidden: { y: 20, opacity: 0 },
+                          visible: {
+                            y: 0,
+                            opacity: 1,
+                            transition: {
+                              type: "spring",
+                              stiffness: 100,
+                              damping: 12,
+                            },
+                          },
+                        }}
+                      >
                         <Button
                           type="submit"
-                          className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-black hover:from-cyan-400 hover:to-blue-500 font-medium"
+                          className={`w-full ${
+                            activeRole === "admin"
+                              ? "bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-400 hover:to-blue-500"
+                              : "bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500"
+                          } text-black font-medium`}
                           disabled={isLoading}
                         >
                           {isLoading ? (
@@ -209,28 +355,70 @@ export default function LoginPage() {
                               Authenticating...
                             </div>
                           ) : (
-                            "Access Mission"
+                            "Sign In"
                           )}
                         </Button>
                       </motion.div>
                     </form>
                   </CardContent>
                   <CardFooter className="flex flex-col space-y-4">
-                    <motion.div variants={itemVariants} className="w-full">
-                      <Button
-                        variant="outline"
-                        className="w-full border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10"
-                        onClick={() => {
-                          setFormData({
-                            username: "agent_nebula",
-                            password: "isro123",
-                          })
-                        }}
-                      >
-                        Use Demo Account
-                      </Button>
+                    <motion.div
+                      variants={{
+                        hidden: { y: 20, opacity: 0 },
+                        visible: {
+                          y: 0,
+                          opacity: 1,
+                          transition: {
+                            type: "spring",
+                            stiffness: 100,
+                            damping: 12,
+                          },
+                        },
+                      }}
+                      className="w-full"
+                    >
+                      {activeRole === "admin" ? (
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            variant="outline"
+                            className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
+                            onClick={() => useDemoAccount("admin")}
+                          >
+                            Admin Demo
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="border-blue-500/50 text-blue-400 hover:bg-blue-500/10"
+                            onClick={() => useDemoAccount("moderator")}
+                          >
+                            Moderator Demo
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          className="w-full border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10"
+                          onClick={() => useDemoAccount("participant")}
+                        >
+                          Use Demo Account
+                        </Button>
+                      )}
                     </motion.div>
-                    <motion.div variants={itemVariants} className="text-center text-sm text-gray-400 w-full">
+                    <motion.div
+                      variants={{
+                        hidden: { y: 20, opacity: 0 },
+                        visible: {
+                          y: 0,
+                          opacity: 1,
+                          transition: {
+                            type: "spring",
+                            stiffness: 100,
+                            damping: 12,
+                          },
+                        },
+                      }}
+                      className="text-center text-sm text-gray-400 w-full"
+                    >
                       New to the mission?{" "}
                       <Link href="/auth/signup" className="text-cyan-400 hover:text-cyan-300">
                         Create agent profile
